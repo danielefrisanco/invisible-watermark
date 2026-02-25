@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-import cv2
+from .utils import bgr2yuv, yuv2bgr, dct2, idct2
 import pywt
 import math
 import pprint
@@ -18,7 +18,7 @@ class EmbedDwtDctSvd(object):
     def encode(self, bgr):
         (row, col, channels) = bgr.shape
 
-        yuv = cv2.cvtColor(bgr, cv2.COLOR_BGR2YUV)
+        yuv = bgr2yuv(bgr)
 
         for channel in range(2):
             if self._scales[channel] <= 0:
@@ -29,13 +29,13 @@ class EmbedDwtDctSvd(object):
 
             yuv[:row//4*4,:col//4*4,channel] = pywt.idwt2((ca1, (v1,h1,d1)), 'haar')
 
-        bgr_encoded = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR)
+        bgr_encoded = yuv2bgr(yuv)
         return bgr_encoded
 
     def decode(self, bgr):
         (row, col, channels) = bgr.shape
 
-        yuv = cv2.cvtColor(bgr, cv2.COLOR_BGR2YUV)
+        yuv = bgr2yuv(bgr)
 
         scores = [[] for i in range(self._wmLen)]
         for channel in range(2):
@@ -68,13 +68,13 @@ class EmbedDwtDctSvd(object):
         return scores
 
     def diffuse_dct_svd(self, block, wmBit, scale):
-        u,s,v = np.linalg.svd(cv2.dct(block))
+        u,s,v = np.linalg.svd(dct2(block))
 
         s[0] = (s[0] // scale + 0.25 + 0.5 * wmBit) * scale
-        return cv2.idct(np.dot(u, np.dot(np.diag(s), v)))
+        return idct2(np.dot(u, np.dot(np.diag(s), v)))
 
     def infer_dct_svd(self, block, scale):
-        u,s,v = np.linalg.svd(cv2.dct(block))
+        u,s,v = np.linalg.svd(dct2(block))
 
         score = 0
         score = int ((s[0] % scale) > scale * 0.5)

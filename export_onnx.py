@@ -1,12 +1,12 @@
 import numpy as np
 import torch
-import cv2
+from imwatermark.utils import imread
 from rivagan import RivaGAN
 
 torch.nn.Module.dump_patches = True
 
 if __name__ == '__main__':
-    bgr = cv2.imread('test_vectors/original.jpg')
+    bgr = imread('test_vectors/original.jpg')
 
     watermarks = np.random.randint(0,2,32)
     data = torch.from_numpy(np.array([watermarks], dtype=np.float32))

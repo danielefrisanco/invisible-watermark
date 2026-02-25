@@ -2,7 +2,6 @@ import struct
 import uuid
 import copy
 import base64
-import cv2
 import numpy as np
 from .maxDct import EmbedMaxDct
 from .dwtDctSvd import EmbedDwtDctSvd

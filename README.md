@@ -36,6 +36,32 @@ accuracy
 > * [Discrete cosine transform](https://en.wikipedia.org/wiki/Discrete_cosine_transform).
 > * [RivaGAN](https://github.com/DAI-Lab/RivaGAN), a deep-learning model trained from Hollywood2 movie clips dataset.
 
+## OpenCV-free
+
+This fork removes the `opencv-python` dependency entirely. The original library used `cv2` for color conversion, DCT transforms, and image I/O — all of which have been replaced with pure numpy/scipy/PIL equivalents:
+
+| Original (cv2) | Replacement |
+| --- | --- |
+| `cv2.cvtColor` (BGR/YUV) | numpy matrix math (BT.601) |
+| `cv2.dct` / `cv2.idct` | `scipy.fft.dctn` / `idctn` |
+| `cv2.imread` / `cv2.imwrite` | `PIL.Image.open` / `Image.save` |
+
+This eliminates Qt and all GUI-related transitive dependencies, making the library safe for headless/server environments and removing LGPL licensing concerns.
+
+## Dependencies and Licenses
+
+| Package | License | Usage |
+| --- | --- | --- |
+| **invisible-watermark** | MIT | This library |
+| **numpy** | BSD 3-Clause | Array operations |
+| **scipy** | BSD 3-Clause | DCT/IDCT transforms |
+| **Pillow** | MIT-CMU (MIT-like) | Image I/O |
+| **PyWavelets** | MIT | DWT transforms |
+| **PyTorch** | BSD 3-Clause | Tensor operations (rivaGan) |
+| **onnxruntime** *(optional)* | MIT | ONNX model inference (rivaGan) |
+
+All dependencies use permissive open-source licenses (MIT or BSD). There are no GPL/LGPL dependencies.
+
 ## How to install
 `pip install invisible-watermark`
 
@@ -46,27 +72,34 @@ accuracy
 * **example** embed 4 characters (32 bits) watermark
 
 ```python
-import cv2
+import numpy as np
+from PIL import Image
 from imwatermark import WatermarkEncoder
 
-bgr = cv2.imread('test.png')
+# Load image as BGR numpy array
+img = Image.open('test.png').convert('RGB')
+bgr = np.array(img)[:, :, ::-1].copy()
 wm = 'test'
 
 encoder = WatermarkEncoder()
 encoder.set_watermark('bytes', wm.encode('utf-8'))
 bgr_encoded = encoder.encode(bgr, 'dwtDct')
 
-cv2.imwrite('test_wm.png', bgr_encoded)
+# Save result
+Image.fromarray(bgr_encoded[:, :, ::-1]).save('test_wm.png')
 ```
 
 ### Decode watermark
 * **example** decode 4 characters (32 bits) watermark
 
 ```python
-import cv2
+import numpy as np
+from PIL import Image
 from imwatermark import WatermarkDecoder
 
-bgr = cv2.imread('test_wm.png')
+# Load image as BGR numpy array
+img = Image.open('test_wm.png').convert('RGB')
+bgr = np.array(img)[:, :, ::-1].copy()
 
 decoder = WatermarkDecoder('bytes', 32)
 watermark = decoder.decode(bgr, 'dwtDct')

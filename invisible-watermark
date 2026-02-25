@@ -14,12 +14,12 @@ import shutil
 import sys
 import time
 import uuid
-import cv2
 import base64
 import time
 import pprint
 
 from imwatermark import WatermarkEncoder, WatermarkDecoder
+from imwatermark.utils import imread, imwrite
 
 pp = pprint.PrettyPrinter(indent=2)
 
@@ -63,7 +63,7 @@ def main():
         wmType = args.type
         if args.method == 'rivaGan':
             WatermarkEncoder.loadModel()
-        bgr = cv2.imread(args.input)
+        bgr = imread(args.input)
         if args.type == 'bytes':
             wm = args.watermark.encode('utf-8')
         elif args.type == 'b16':
@@ -78,7 +78,7 @@ def main():
         if args.verbose:
             print('watermark length:', encoder.get_length())
             print('encode time ms:', (time.time()-start) * 1000)
-        cv2.imwrite(args.output, bgr_encoded)
+        imwrite(args.output, bgr_encoded)
     elif action == 'decode':
         if args.type in ['bytes', 'bits', 'b16']:
             if args.length <= 0:
@@ -90,7 +90,7 @@ def main():
             decoder = WatermarkDecoder(args.type)
         if args.method == 'rivaGan':
             WatermarkDecoder.loadModel()
-        bgr = cv2.imread(args.input)
+        bgr = imread(args.input)
         start = time.time()
         wm = decoder.decode(bgr, args.method)
         if args.verbose:
